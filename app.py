@@ -1,189 +1,235 @@
 import streamlit as st
 import pandas as pd
+import html
 
 # ==========================================
-# CONFIGURACIÓN Y ESTILOS UDAL
+# 1. CONFIGURACIÓN Y CSS (Incluye formato para impresión a PDF)
 # ==========================================
-st.set_page_config(page_title="Simulador: Empresa Estética", page_icon="🏢", layout="wide")
+st.set_page_config(page_title="Simulador de Creación Cosmética", page_icon="✨", layout="wide")
 
 st.markdown("""
     <style>
-    .stApp { background-color: #f4f6f9; }
-    h1, h2, h3 { color: #002b5e !important; font-family: 'Helvetica Neue', sans-serif; }
-    .stButton>button { background-color: #f2a900; color: #ffffff; font-weight: bold; border-radius: 8px; border: none; }
-    .stButton>button:hover { background-color: #d19200; color: white; }
-    .header-box { background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0px 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-    .card-foda { padding: 15px; border-radius: 8px; color: white; margin-bottom: 10px; }
-    .bg-fortaleza { background-color: #27ae60; }
-    .bg-debilidad { background-color: #e74c3c; }
-    .bg-oportunidad { background-color: #2980b9; }
-    .bg-amenaza { background-color: #8e44ad; }
+    /* Estilos generales */
+    .stApp { background-color: #f9fbfd; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    h1, h2, h3 { color: #2c3e50 !important; }
+    
+    /* Cajas de diseño */
+    .brand-preview { padding: 30px; border-radius: 15px; text-align: center; margin-top: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: all 0.3s ease; }
+    .example-box { background-color: #e8f4f8; border-left: 4px solid #3498db; padding: 10px; font-size: 0.9em; margin-bottom: 15px; }
+    .metric-card { background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border-top: 4px solid #f2a900; }
+    
+    /* Estilos para ocultar elementos al imprimir a PDF */
+    @media print {
+        header, .stSidebar, .stTabs [data-baseweb="tab-list"], button { display: none !important; }
+        .stApp { background-color: white !important; }
+        .brand-preview, .metric-card { box-shadow: none !important; border: 1px solid #ccc !important; }
+        * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+    }
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# PANTALLA DE ACCESO
+# ENCABEZADO Y BOTÓN DE PDF
 # ==========================================
-if 'acceso_empresa' not in st.session_state: st.session_state.acceso_empresa = False
+col_header, col_print = st.columns([4, 1])
+with col_header:
+    st.markdown("<h1>✨ Simulador Integral: Creación de Empresa Cosmética</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #7f8c8d; font-size: 1.2em;'>Desde la formulación INCI hasta el punto de equilibrio financiero.</p>", unsafe_allow_html=True)
+with col_print:
+    # Inyección de JavaScript para imprimir
+    st.components.v1.html("""
+        <button onclick="window.print()" style="background-color: #002b5e; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%;">🖨️ Imprimir Proyecto a PDF</button>
+    """, height=50)
 
-if not st.session_state.acceso_empresa:
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("<div style='background-color: white; padding: 30px; border-radius: 15px; text-align: center;'><h2 style='color: #002b5e;'>Laboratorio de Negocios</h2><p>Creación de Empresa Estética</p></div>", unsafe_allow_html=True)
-        pwd = st.text_input("Ingresa la clave del simulador:", type="password")
-        if st.button("Ingresar al Simulador", use_container_width=True):
-            if pwd == "Emprendedor2026":
-                st.session_state.acceso_empresa = True
-                st.rerun()
-            else: st.error("Contraseña incorrecta.")
-    st.stop()
+st.markdown("---")
 
 # ==========================================
-# INTERFAZ PRINCIPAL
+# TABS PRINCIPALES
 # ==========================================
-st.markdown("""
-<div class='header-box'>
-    <h1 style='margin: 0; font-size: 2.2rem;'>Simulador Empresarial Estético</h1>
-    <p style='margin: 0; font-size: 1.1rem; color: #555;'>De la idea a la estructura operativa.</p>
-</div>
-""", unsafe_allow_html=True)
+tab_identidad, tab_receta, tab_estrategia, tab_finanzas, tab_caso = st.tabs([
+    "🎨 1. Marca e Identidad", 
+    "🧪 2. Formulación", 
+    "🎯 3. Estrategia 4P", 
+    "📈 4. Costeo y Finanzas",
+    "⚖️ 5. Caso Legal COFEPRIS"
+])
 
-tab_plan, tab_finanzas, tab_org = st.tabs(["🎯 1. Planeación Estratégica", "💰 2. Costeo y Las 4 P's", "🏢 3. Organización y Estructura"])
-
-# --- ETAPA 1: PLANEACIÓN ---
-with tab_plan:
-    st.markdown("### Identidad Corporativa")
-    colA, colB = st.columns(2)
-    with colA:
-        nombre_empresa = st.text_input("Nombre de la Clínica / Marca Cosmética:")
-        mision = st.text_area("Misión (¿Qué hacemos hoy?):", placeholder="Ej. Brindar tratamientos dermatológicos...")
-    with colB:
-        vision = st.text_area("Visión (¿Dónde estaremos en 5 años?):", placeholder="Ej. Ser la clínica líder en Puebla...")
-        valores = st.text_input("Valores Principales:")
-
-    st.markdown("---")
-    st.markdown("### Análisis FODA")
-    st.write("Identifica los factores internos y externos antes de lanzar el producto/servicio.")
+# ------------------------------------------
+# TAB 1: IDENTIDAD Y MARCA
+# ------------------------------------------
+with tab_identidad:
+    st.markdown("### Identidad Filosófica y Visual")
     
-    col_f1, col_f2 = st.columns(2)
-    with col_f1:
-        st.markdown("<div class='card-foda bg-fortaleza'><b>Fortalezas (Interno)</b></div>", unsafe_allow_html=True)
-        st.text_area("¿Qué ventajas competitivas o patentes tienes?", key="fort")
-        st.markdown("<div class='card-foda bg-oportunidad'><b>Oportunidades (Externo)</b></div>", unsafe_allow_html=True)
-        st.text_area("¿Qué tendencias del mercado (ej. cosmética vegana) puedes aprovechar?", key="opor")
-    with col_f2:
-        st.markdown("<div class='card-foda bg-debilidad'><b>Debilidades (Interno)</b></div>", unsafe_allow_html=True)
-        st.text_area("¿Qué te falta? (ej. falta de capital, personal sin capacitar)", key="deb")
-        st.markdown("<div class='card-foda bg-amenaza'><b>Amenazas (Externo)</b></div>", unsafe_allow_html=True)
-        st.text_area("Nuevas leyes de COFEPRIS, competencia agresiva, inflación.", key="amen")
+    col_texto, col_visual = st.columns([3, 2])
+    
+    with col_texto:
+        nombre = st.text_input("Nombre de la Marca:")
+        
+        st.markdown("<div class='example-box'><b>Ejemplo de Misión:</b> Potenciar la salud cutánea de nuestros clientes mediante cosmética natural, ofreciendo fórmulas libres de crueldad animal y de alta eficacia comprobada.</div>", unsafe_allow_html=True)
+        mision = st.text_area("Misión:")
+        
+        st.markdown("<div class='example-box'><b>Ejemplo de Visión:</b> Posicionarnos para el 2030 como la marca líder en dermocosmética sustentable en el centro de México, expandiendo nuestra línea a tratamientos clínicos.</div>", unsafe_allow_html=True)
+        vision = st.text_area("Visión:")
+        
+        st.markdown("<div class='example-box'><b>Ejemplo de Valores:</b> Transparencia científica, Ética profesional, Sustentabilidad, Innovación continua.</div>", unsafe_allow_html=True)
+        valores = st.text_input("Valores:")
 
-# --- ETAPA 2: FINANZAS Y MARKETING ---
+    with col_visual:
+        st.markdown("#### Psicología del Color")
+        color_primario = st.color_picker("Color Principal (Fondo):", "#002b5e")
+        color_secundario = st.color_picker("Color Secundario (Texto/Acentos):", "#f2a900")
+        
+        # Previsualización dinámica de la marca
+        st.markdown(f"""
+        <div class='brand-preview' style='background-color: {color_primario};'>
+            <h2 style='color: {color_secundario}; font-family: "Didot", serif; margin-bottom: 5px;'>{nombre if nombre else "TU MARCA AQUÍ"}</h2>
+            <p style='color: white; font-size: 0.9em; font-style: italic;'>Dermocosmética Avanzada</p>
+            <div style='background-color: {color_secundario}; height: 3px; width: 50%; margin: 0 auto; border-radius: 2px;'></div>
+        </div>
+        """, unsafe_allow_html=True)
+
+# ------------------------------------------
+# TAB 2: RECETA / FORMULACIÓN
+# ------------------------------------------
+with tab_receta:
+    st.markdown("### Tabla de Formulación Cosmética (INCI)")
+    st.write("Estructura la base, los activos y los aditivos de tu producto estrella.")
+    
+    # Tabla editable usando pandas y st.data_editor
+    df_receta = pd.DataFrame(
+        [
+            {"Nomenclatura INCI": "Aqua", "Función": "Solvente (Fase Acuosa)", "Porcentaje (%)": 70.0},
+            {"Nomenclatura INCI": "Glycerin", "Función": "Humectante", "Porcentaje (%)": 5.0},
+            {"Nomenclatura INCI": "Niacinamide", "Función": "Principio Activo (Seborregulador)", "Porcentaje (%)": 4.0},
+            {"Nomenclatura INCI": "Cetearyl Alcohol", "Función": "Emulsionante", "Porcentaje (%)": 6.0},
+            {"Nomenclatura INCI": "Simmondsia Chinensis Seed Oil", "Función": "Emoliente", "Porcentaje (%)": 14.0},
+            {"Nomenclatura INCI": "Phenoxyethanol", "Función": "Conservador", "Porcentaje (%)": 1.0},
+        ]
+    )
+    
+    receta_editada = st.data_editor(df_receta, num_rows="dynamic", use_container_width=True)
+    
+    total_pct = receta_editada["Porcentaje (%)"].sum()
+    if total_pct == 100.0:
+        st.success(f"✅ Fórmula estabilizada. Total: {total_pct}%")
+    else:
+        st.error(f"⚠️ Error de formulación: El porcentaje total debe ser 100%. Actual: {total_pct}%")
+
+# ------------------------------------------
+# TAB 3: ESTRATEGIA 4 P's
+# ------------------------------------------
+with tab_estrategia:
+    st.markdown("### Estrategia de Marketing (Mix 4P)")
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("<div class='example-box'><b>Ejemplo Producto:</b> Crema facial de textura ligera, envase airless de 50ml, aroma cítrico suave, empaque de cartón reciclado con sello Cruelty Free.</div>", unsafe_allow_html=True)
+        producto = st.text_area("📦 Producto (Características físicas, empaque, beneficios):")
+        
+        st.markdown("<div class='example-box'><b>Ejemplo Plaza:</b> Venta directa en cabina estética (30%) y tienda online propia con envíos nacionales vía FedEx (70%).</div>", unsafe_allow_html=True)
+        plaza = st.text_area("📍 Plaza (Canales de distribución y venta):")
+        
+    with c2:
+        st.markdown("<div class='example-box'><b>Ejemplo Promoción:</b> Campañas de conversión en Meta Ads, micro-influencers de Skincare en TikTok, y masterclass gratuita de cuidado facial en la clínica.</div>", unsafe_allow_html=True)
+        promocion = st.text_area("📣 Promoción (Publicidad, RRPP, redes sociales):")
+        
+        st.markdown("<div class='example-box'><b>Ejemplo Precio:</b> Estrategia de 'Prestige Pricing'. Precio alto para denotar calidad premium frente a marcas de supermercado.</div>", unsafe_allow_html=True)
+        estrategia_precio = st.text_area("💵 Estrategia de Precio (Psicología detrás del cobro):")
+
+# ------------------------------------------
+# TAB 4: COSTEO Y FINANZAS
+# ------------------------------------------
 with tab_finanzas:
-    st.markdown("### Mix de Marketing (Las 4 P's)")
-    c1, c2, c3, c4 = st.columns(4)
-    with c1: st.text_area("📦 Producto", "Línea facial anti-edad con ácido hialurónico.")
-    with c2: st.text_area("💵 Precio", "Estrategia de penetración: $450 MXN por unidad.")
-    with c3: st.text_area("📍 Plaza", "Venta directa en clínica y e-commerce.")
-    with c4: st.text_area("📣 Promoción", "Campañas en Meta Ads y PR con influencers locales.")
+    st.markdown("### Estructura de Costos y Fijación de Precio")
+    
+    col_cf, col_cv = st.columns(2)
+    
+    # 6 Columnas/Campos para Costos Fijos
+    with col_cf:
+        st.markdown("#### Costos Fijos Mensuales (CF)")
+        cf1 = st.number_input("1. Renta de local/cabina:", value=8000.0)
+        cf2 = st.number_input("2. Sueldos base (dueño/empleados):", value=12000.0)
+        cf3 = st.number_input("3. Servicios (Agua, Luz, Internet):", value=2500.0)
+        cf4 = st.number_input("4. Publicidad fija mensual:", value=3000.0)
+        cf5 = st.number_input("5. Suscripciones (Software/Punto de venta):", value=500.0)
+        cf6 = st.number_input("6. Otros fijos (Seguros/Contador):", value=1500.0)
+        total_cf = cf1 + cf2 + cf3 + cf4 + cf5 + cf6
+        st.markdown(f"<h4 style='color: #c0392b;'>Total CF Mensual: ${total_cf:,.2f}</h4>", unsafe_allow_html=True)
+
+    # 6 Columnas/Campos para Costos Variables (Por Unidad)
+    with col_cv:
+        st.markdown("#### Costos Variables por Producto (CVu)")
+        cv1 = st.number_input("1. Materia prima (INCI total por unidad):", value=45.0)
+        cv2 = st.number_input("2. Envase primario (Frasco/Tarro):", value=18.0)
+        cv3 = st.number_input("3. Empaque secundario (Caja):", value=12.0)
+        cv4 = st.number_input("4. Etiquetado (Frontal e INCI trasero):", value=5.0)
+        cv5 = st.number_input("5. Envío / Logística por unidad:", value=0.0)
+        cv6 = st.number_input("6. Comisión bancaria/pasarela por venta:", value=15.0)
+        total_cv_unitario = cv1 + cv2 + cv3 + cv4 + cv5 + cv6
+        st.markdown(f"<h4 style='color: #2980b9;'>Total CVu: ${total_cv_unitario:,.2f}</h4>", unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("### Simulador de Costeo y Punto de Equilibrio")
-    st.info("¿Cuántos servicios/productos debes vender solo para no perder dinero?")
     
-    col_costos1, col_costos2 = st.columns(2)
-    with col_costos1:
-        st.write("**Costos Fijos Mensuales (CF)**")
-        renta = st.number_input("Renta del local ($):", value=15000)
-        sueldos = st.number_input("Nómina base ($):", value=20000)
-        servicios = st.number_input("Servicios e Internet ($):", value=3000)
-        cf_total = renta + sueldos + servicios
-        st.error(f"Total Costos Fijos: ${cf_total:,.2f}")
+    # Fijación de Precio y Proyecciones
+    st.markdown("### Fijación de Precio y Proyección Financiera")
+    
+    col_proj1, col_proj2, col_proj3 = st.columns(3)
+    
+    with col_proj1:
+        margen_deseado = st.number_input("Margen de Ganancia Deseado (%):", value=60.0, step=5.0)
+        # Fórmula de fijación de precio por margen: Precio = Costo / (1 - Margen%) o Precio = Costo + (Costo * Margen%)
+        # Usaremos el modelo de recargo (Markup) directo para facilitar a los alumnos
+        precio_final = total_cv_unitario + (total_cv_unitario * (margen_deseado / 100))
+        st.info(f"🏷️ **Precio de Venta Sugerido:** ${precio_final:,.2f}")
         
-    with col_costos2:
-        st.write("**Costos Variables por Unidad (CV)**")
-        insumos = st.number_input("Insumos/Producto ($):", value=100)
-        comision = st.number_input("Comisión de venta ($):", value=50)
-        cv_total = insumos + comision
-        precio_venta = st.number_input("Precio de Venta al Público ($):", value=500)
-        
-    if precio_venta > cv_total:
-        punto_eq = cf_total / (precio_venta - cv_total)
-        st.success(f"⚖️ **Punto de Equilibrio:** Necesitas vender **{int(punto_eq) + 1} unidades/servicios** al mes para no quebrar.")
-    else:
-        st.warning("⚠️ Tu costo variable es mayor al precio de venta. Estás perdiendo dinero en cada venta.")
+        # Override opcional del alumno
+        precio_real = st.number_input("Precio Final de Venta (Tu decisión):", value=precio_final)
 
-# --- ETAPA 3: ORGANIZACIÓN (EL NUEVO TEMA) ---
-with tab_org:
-    st.markdown("### Estructura Organizacional y Jerárquica")
-    st.write("Pasar del emprendedor 'todólogo' a una empresa estructurada requiere definir quién rinde cuentas a quién y qué hace exactamente.")
-    
-    st.markdown("#### 1. Arquitectura del Organigrama")
-    tipo_org = st.selectbox("Selecciona el tipo de estructura para la clínica/empresa:", 
-                            ["Estructura Funcional (Recomendada para clínicas medianas)", 
-                             "Estructura Plana (Para startups o cabinas pequeñas)",
-                             "Estructura Divisional (Si tienen sucursales o franquicias)"])
-    
-    if "Funcional" in tipo_org:
-        st.info("🏢 **Funcional:** Agrupa a los empleados por su especialidad (Dirección, Clínica, Ventas, Administración). Garantiza que los especialistas sean dirigidos por expertos en su área.")
-    elif "Plana" in tipo_org:
-        st.info("➖ **Plana:** Se eliminan los mandos medios. Las cosmetólogas y vendedores reportan directamente al dueño. Da mucha velocidad, pero el dueño puede saturarse.")
-    else:
-        st.info("🗺️ **Divisional:** Dividido por sedes geográficas (ej. Sucursal Puebla Centro, Sucursal Cholula) o por tipo de negocio (Línea Cosmética vs Clínica de Servicios).")
-
-    st.markdown("---")
-    st.markdown("#### 2. Constructor del Manual de Puestos y Funciones")
-    st.write("Selecciona un puesto clave para generar su perfil técnico y operativo.")
-    
-    puesto_sel = st.selectbox("Perfil a consultar:", 
-                              ["Cosmetóloga / Cosmiatra Principal", 
-                               "Director Médico (Responsable Sanitario)", 
-                               "Gerente de Recepción y Ventas",
-                               "Community Manager (Marketing)"])
-    
-    # Base de datos simulada de manuales de puestos
-    manuales = {
-        "Cosmetóloga / Cosmiatra Principal": {
-            "objetivo": "Ejecutar con excelencia los protocolos estéticos faciales y corporales, garantizando la satisfacción del cliente y el cumplimiento de las normas de bioseguridad.",
-            "reporta_a": "Director Médico / Gerente Operativo",
-            "supervisa_a": "Auxiliares de cabina, practicantes.",
-            "funciones": ["Realizar diagnósticos de piel.", "Aplicar tratamientos según aparatología y principios activos aprobados.", "Llenar expedientes clínicos y Consentimientos Informados.", "Venta cruzada de productos de apoyo en casa."],
-            "requisitos": "Licenciatura en Cosmetología/Cosmiatría. Conocimiento profundo de INCI. Cursos en aparatología avanzada."
-        },
-        "Director Médico (Responsable Sanitario)": {
-            "objetivo": "Garantizar el cumplimiento legal ante COFEPRIS y avalar los protocolos invasivos o aparatología médica tipo clase II y III.",
-            "reporta_a": "Dirección General / Dueños",
-            "supervisa_a": "Todo el personal clínico e instrumental.",
-            "funciones": ["Firmar el aviso de funcionamiento.", "Aprobar manuales de procedimientos clínicos.", "Atender emergencias o reacciones adversas graves.", "Capacitar en bioseguridad."],
-            "requisitos": "Título y Cédula de Médico Cirujano. Especialidad en Medicina Estética o Dermatología."
-        },
-        "Gerente de Recepción y Ventas": {
-            "objetivo": "Maximizar la tasa de conversión de clientes, asegurar la rentabilidad diaria y brindar una excelente primera impresión en la clínica.",
-            "reporta_a": "Dirección General",
-            "supervisa_a": "Recepcionistas, personal de limpieza.",
-            "funciones": ["Gestión de agenda y confirmación de citas.", "Cierre de ventas de paquetes y membresías.", "Corte de caja y facturación.", "Manejo de quejas y servicio al cliente."],
-            "requisitos": "Lic. en Administración o afin. Excelente manejo de software de punto de venta y CRM. Habilidades de negociación."
-        },
-        "Community Manager (Marketing)": {
-            "objetivo": "Posicionar la marca estética en el mercado digital y generar flujo constante de prospectos (leads) hacia la clínica.",
-            "reporta_a": "Dirección General / Gerente de Ventas",
-            "supervisa_a": "N/A",
-            "funciones": ["Diseñar la parrilla de contenidos en redes sociales.", "Gestionar presupuesto de pauta (Meta Ads/Google).", "Responder mensajes y derivar prospectos a ventas.", "Vigilar el cumplimiento ético publicitario (evitar promesas engañosas)."],
-            "requisitos": "Lic. en Comunicación o Mercadotecnia. Dominio de estrategias digitales y copywriting persuasivo."
-        }
-    }
-    
-    datos_puesto = manuales[puesto_sel]
-    
-    st.markdown(f"**Puesto:** {puesto_sel}")
-    st.markdown(f"**📍 Objetivo del Puesto:** {datos_puesto['objetivo']}")
-    
-    c_jer1, c_jer2 = st.columns(2)
-    with c_jer1: st.success(f"⬆️ **Le reporta a:** {datos_puesto['reporta_a']}")
-    with c_jer2: st.info(f"⬇️ **Supervisa a:** {datos_puesto['supervisa_a']}")
-    
-    st.markdown("**📋 Funciones Específicas (Manual de Operaciones):**")
-    for funcion in datos_puesto['funciones']:
-        st.markdown(f"- {funcion}")
+    with col_proj2:
+        unidades_producidas = st.number_input("Unidades Producidas al Mes:", value=500, step=50)
+        unidades_vendidas = st.number_input("Unidades Vendidas al Mes:", value=300, step=50)
         
-    st.markdown(f"**🎓 Perfil y Requisitos:** {datos_puesto['requisitos']}")
+        if unidades_vendidas > unidades_producidas:
+            st.warning("⚠️ No puedes vender más de lo que produces.")
+
+    with col_proj3:
+        # Cálculos de rentabilidad
+        ingresos_totales = unidades_vendidas * precio_real
+        costo_produccion_total = unidades_producidas * total_cv_unitario # Se gasta en lo que se produce
+        gastos_totales = total_cf + costo_produccion_total
+        utilidad_neta = ingresos_totales - gastos_totales
+        
+        try:
+            punto_equilibrio_unidades = total_cf / (precio_real - total_cv_unitario)
+        except ZeroDivisionError:
+            punto_equilibrio_unidades = 0
+            
+        st.markdown(f"<div class='metric-card'><h4>Ingresos Totales</h4><h2>${ingresos_totales:,.2f}</h2></div>", unsafe_allow_html=True)
+
+    col_res1, col_res2 = st.columns(2)
+    with col_res1:
+        color_utilidad = "#27ae60" if utilidad_neta >= 0 else "#e74c3c"
+        st.markdown(f"<div class='metric-card'><h4>Utilidad Neta (Ganancia)</h4><h2 style='color: {color_utilidad};'>${utilidad_neta:,.2f}</h2></div>", unsafe_allow_html=True)
+    with col_res2:
+        st.markdown(f"<div class='metric-card'><h4>Punto de Equilibrio</h4><h2>{int(punto_equilibrio_unidades) + 1} unidades</h2><p style='color: gray; font-size: 0.8em;'>Para cubrir fijos y variables sin perder dinero.</p></div>", unsafe_allow_html=True)
+
+# ------------------------------------------
+# TAB 5: CASO ÉTICO / COFEPRIS
+# ------------------------------------------
+with tab_caso:
+    st.markdown("### Dilema de Negocios y Ética Regulatoria")
+    
+    st.markdown("""
+    <div style="background-color: #f2f2f2; padding: 20px; border-radius: 10px; border-left: 5px solid #e67e22;">
+    <h4>El Caso: "Aceite para Barba Detox Extremo"</h4>
+    <p>Has lanzado al mercado un producto masculino llamado <i>Aceite para Barba Detox Extremo</i>. La formulación incluye aceites esenciales de menta y eucalipto en altas concentraciones. Tus ventas van increíblemente bien.</p>
+    <p>Sin embargo, en tu estrategia de promoción (P de Promoción), tu equipo de marketing decidió poner en la etiqueta frontal y en la página web oficial la siguiente frase publicitaria:</p>
+    <p style="font-size: 1.2em; font-weight: bold; font-style: italic; text-align: center;">"El único aceite terapéutico que cura la dermatitis facial, acelera el crecimiento del vello en 3 días y elimina toxinas de la sangre."</p>
+    <p>A las dos semanas, recibes una notificación de visita de inspección por parte de COFEPRIS por sospecha de producto frontera (producto milagro).</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("#### Resolución del Conflicto:")
+    q1 = st.text_area("1. Análisis INCI y Etiquetado: ¿Qué errores cometió la empresa en las afirmaciones de la etiqueta según el reglamento de productos cosméticos?")
+    q2 = st.text_area("2. Estrategia Legal: ¿Qué plan de acción inmediato debes tomar para evitar la inmovilización del producto y las multas?")
+    q3 = st.text_area("3. Bioética: Haciendo referencia al concepto de 'El Precio de la Perfección', ¿cómo afecta a la reputación de la marca jugar con la desesperación de los clientes mediante promesas falsas de crecimiento en 3 días?")
