@@ -4,7 +4,7 @@ import pandas as pd
 # ==========================================
 # 1. CONFIGURACIÓN Y ESTILOS (Para PDF y UI)
 # ==========================================
-st.set_page_config(page_title="Simulador de Creación Cosmética", page_icon="✨", layout="wide")
+st.set_page_config(page_title="Simulador de Empresa Cosmética", page_icon="✨", layout="wide")
 
 st.markdown("""
     <style>
@@ -30,7 +30,26 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. ENCABEZADO Y BOTÓN DE PDF
+# 2. INICIALIZACIÓN DE MEMORIA SEGURA (Evita errores al editar tablas)
+# ==========================================
+if 'df_inci' not in st.session_state:
+    st.session_state.df_inci = pd.DataFrame([
+        {"Ingrediente INCI": "Aqua (Agua)", "Función": "Solvente", "Porcentaje (%)": 70.0},
+        {"Ingrediente INCI": "Glycerin", "Función": "Humectante", "Porcentaje (%)": 5.0},
+        {"Ingrediente INCI": "Niacinamide", "Función": "Activo", "Porcentaje (%)": 4.0},
+        {"Ingrediente INCI": "Cetearyl Alcohol", "Función": "Emulsionante", "Porcentaje (%)": 6.0},
+        {"Ingrediente INCI": "Aceite de Jojoba", "Función": "Emoliente", "Porcentaje (%)": 14.0},
+        {"Ingrediente INCI": "Phenoxyethanol", "Función": "Conservador", "Porcentaje (%)": 1.0},
+    ])
+
+if 'df_cf' not in st.session_state:
+    st.session_state.df_cf = pd.DataFrame([{"Costo Fijo": f"Rubro {i+1}", "Monto ($)": 0.0} for i in range(6)])
+
+if 'df_cv' not in st.session_state:
+    st.session_state.df_cv = pd.DataFrame([{"Costo Variable": f"Rubro {i+1}", "Monto ($)": 0.0} for i in range(6)])
+
+# ==========================================
+# 3. ENCABEZADO Y BOTÓN DE PDF (Corregido)
 # ==========================================
 col_header, col_print = st.columns([4, 1])
 with col_header:
@@ -40,11 +59,11 @@ with col_print:
     st.components.v1.html("""
         <button onclick="window.parent.print()" style="background-color: #002b5e; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1rem;">🖨️ Descargar Proyecto (PDF)</button>
     """, height=60)
-    
+
 st.markdown("---")
 
 # ==========================================
-# 3. DATOS MAESTROS
+# 4. DATOS MAESTROS
 # ==========================================
 psicologia_color = {
     "🔵 Azul": "Confianza, Calma, Profesionalismo. (Dermocosmética clínica).",
@@ -62,7 +81,7 @@ iconos_disponibles = {
 }
 
 # ==========================================
-# 4. TABS PRINCIPALES (NUEVO ORDEN)
+# 5. TABS PRINCIPALES
 # ==========================================
 tab_planeacion, tab_producto, tab_marketing, tab_finanzas, tab_legal, tab_organizacion = st.tabs([
     "🎯 1. Planeación", 
@@ -132,35 +151,20 @@ with tab_producto:
     
     st.info("💡 Define los porcentajes de tu fórmula. Luego ingresa el volumen de tu envase para calcular exactamente cuántos mililitros/gramos necesitas llevar al laboratorio de cada ingrediente.")
     
-    # 1. Ingreso del volumen total
     volumen_total = st.number_input("Volumen a fabricar por envase (ml/g):", value=50, step=10)
     
     st.write("**Edita los ingredientes y su porcentaje (%)**")
     
-    # 2. Editor de tabla base
-    df_inci_base = pd.DataFrame([
-        {"Ingrediente INCI": "Aqua (Agua)", "Función": "Solvente", "Porcentaje (%)": 70.0},
-        {"Ingrediente INCI": "Glycerin", "Función": "Humectante", "Porcentaje (%)": 5.0},
-        {"Ingrediente INCI": "Niacinamide", "Función": "Activo", "Porcentaje (%)": 4.0},
-        {"Ingrediente INCI": "Cetearyl Alcohol", "Función": "Emulsionante", "Porcentaje (%)": 6.0},
-        {"Ingrediente INCI": "Aceite de Jojoba", "Función": "Emoliente", "Porcentaje (%)": 14.0},
-        {"Ingrediente INCI": "Phenoxyethanol", "Función": "Conservador", "Porcentaje (%)": 1.0},
-    ])
-    
-    # El usuario edita la tabla
-    receta_editada = st.data_editor(df_inci_base, num_rows="dynamic", use_container_width=True)
+    # Se utiliza la tabla anclada en la memoria segura
+    receta_editada = st.data_editor(st.session_state.df_inci, num_rows="dynamic", use_container_width=True, key="editor_inci")
     
     total_pct = receta_editada["Porcentaje (%)"].sum()
     
-    # 3. Lógica de cálculo interactivo
     if total_pct == 100.0:
         st.success(f"✅ Fórmula estabilizada al 100%. Aquí está tu receta de laboratorio para un envase de {volumen_total} ml/g:")
-        
-        # Calcular los ml o gramos reales
-        receta_editada["Cantidad Requerida (ml o g)"] = (receta_editada["Porcentaje (%)"] / 100) * volumen_total
-        
-        # Mostrar la tabla final no editable con los resultados
-        st.dataframe(receta_editada[["Ingrediente INCI", "Porcentaje (%)", "Cantidad Requerida (ml o g)"]], use_container_width=True)
+        receta_calculada = receta_editada.copy()
+        receta_calculada["Cantidad Requerida (ml o g)"] = (receta_calculada["Porcentaje (%)"] / 100) * volumen_total
+        st.dataframe(receta_calculada[["Ingrediente INCI", "Porcentaje (%)", "Cantidad Requerida (ml o g)"]], use_container_width=True)
     else:
         st.error(f"⚠️ La fórmula debe sumar exactamente 100%. Actualmente suma: {total_pct}%")
 
@@ -203,15 +207,15 @@ with tab_finanzas:
     
     with col_cf:
         st.markdown("#### Costos Fijos Mensuales (CF)")
-        df_cf = pd.DataFrame([{"Costo Fijo": f"Rubro {i+1}", "Monto ($)": 0.0} for i in range(6)])
-        cf_editado = st.data_editor(df_cf, use_container_width=True, key="d_cf")
+        # Se utiliza la tabla anclada en la memoria segura
+        cf_editado = st.data_editor(st.session_state.df_cf, use_container_width=True, key="editor_cf")
         total_cf = cf_editado["Monto ($)"].sum()
         st.markdown(f"<h4 style='color: #c0392b;'>Total CF: ${total_cf:,.2f}</h4>", unsafe_allow_html=True)
 
     with col_cv:
         st.markdown("#### Costos Variables por Unidad (CVu)")
-        df_cv = pd.DataFrame([{"Costo Variable": f"Rubro {i+1}", "Monto ($)": 0.0} for i in range(6)])
-        cv_editado = st.data_editor(df_cv, use_container_width=True, key="d_cv")
+        # Se utiliza la tabla anclada en la memoria segura
+        cv_editado = st.data_editor(st.session_state.df_cv, use_container_width=True, key="editor_cv")
         total_cv_unitario = cv_editado["Monto ($)"].sum()
         st.markdown(f"<h4 style='color: #2980b9;'>Total CVu: ${total_cv_unitario:,.2f}</h4>", unsafe_allow_html=True)
 
